@@ -386,7 +386,7 @@ What stands in for what:
 | Alarms, repeating timers, alarm pools | Fired on the emulator's thread in emulated time, as the timer interrupt would; one late is fired once, not caught up |
 | Hardware divider | C division, with the divider's results for division by zero |
 | `DPRINTF` | Hatari's log, with `--md-verbose on` |
-| `watchdog_reboot` | The firmware is powered off and on; `watchdog_hw->scratch[]` survives that, and is cleared by a cold reset |
+| `watchdog_reboot` | The firmware is powered off and on, from fresh RAM; `watchdog_hw->scratch[]` survives that, and is cleared by a cold reset |
 | DMA | Memory-to-memory transfers happen at once (byte swapping and all); ones paced by the PIO or another peripheral do not. `dma_claim_unused_channel(false)` says none is free, so a caller with a CPU path takes it |
 | Linker-script regions (`memmap_rp.ld`) | Real symbols at the SidecarTridge Booster's offsets in flash, and `__rom_in_ram_start__` at ROM4 |
 | Wi-Fi (CYW43), `cyw43_arch`, `async_context` | With `[wifi]`: any network can be joined, and the chip's frames go to your computer's network (see [Wi-Fi](#wi-fi)) |
@@ -400,9 +400,12 @@ cartridge, every 256th ROM4 read (so a firmware can make progress while
 the ST polls it) and once per frame; timers are checked on every read.
 Its `main` and core 1, if started, run alongside.
 
-A reboot powers the firmware off and on again in the same process, so
-its variables keep their values, where the RP2040 would start with fresh
-RAM: `init` should set up whatever it relies on.
+A reboot or a power cycle starts the firmware from fresh RAM, as on the
+RP2040: EmuMD saves the `.mdfw`'s variables before its first power-on and
+puts them back at every one after. Flash survives both, and
+`watchdog_hw->scratch[]` survives a reboot. One catch, in C++: a global
+whose constructor took heap memory goes back to pointing at that memory,
+whatever has happened to it since, so set such things up in `init`.
 
 ## Wi-Fi
 
@@ -481,9 +484,8 @@ Things to know:
   are moving, EmuMD holds Hatari back to real time; when the network is
   quiet, Hatari runs as fast as it can.
 - **A power cycle** (a cold reset, or `watchdog_reboot()`) switches the
-  chip off and on: connections are dropped and DHCP starts again. lwIP is
-  set up only once, as the Pico SDK does, so the rest of its state
-  carries over, as the firmware's own variables do.
+  chip off and on: connections are dropped, DHCP starts again, and lwIP
+  starts from fresh RAM with the rest of the firmware.
 - **The radio itself is not emulated:** signal, interference, speed and the
   chip's timing need a real Pico W. Access point mode starts, but nothing
   can join it. lwIP has to run without an OS (`NO_SYS=1`, as with both
@@ -590,10 +592,7 @@ Things to know:
   chip off, pads and all, with no `on_device_disconnected`, and forgets
   the platform, as its RAM would be. When the firmware sets it again and
   calls `uni_init()`, the script is read again and plays from the start,
-  as bonded pads would come back after a reboot. A firmware that keeps an
-  "already initialised" flag across the reboot (its variables keep their
-  values, see above) will not call `uni_init()` again, and has no pads
-  from then on.
+  as bonded pads would come back after a reboot.
 - **`uni_bt_disconnect_device_safe(idx)`** drops the scripted pad in that
   slot at the next poll. A later `state` line for it is reported as not
   connected and left out; a later `connect` fills the slot again.

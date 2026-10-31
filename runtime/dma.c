@@ -12,6 +12,8 @@
 
 #include <pthread.h>
 
+#include "runtime.h"
+
 static dma_hw_t s_dma_hw;
 dma_hw_t *dma_hw = &s_dma_hw;
 
@@ -23,7 +25,7 @@ static struct {
 } s_ch[NUM_DMA_CHANNELS];
 
 static uint32_t s_claimed;
-static pthread_mutex_t s_claim_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t s_claim_lock MDFW_KEEP = PTHREAD_MUTEX_INITIALIZER;
 
 int dma_claim_unused_channel(bool required) {
   if (!required) return -1; /* the caller has another way: take it */

@@ -37,8 +37,8 @@ static uint64_t s_next_due = UINT64_MAX; /* earliest due_us, for a quick no */
 
 /* Recursive: a callback may add or cancel timers. Held while a callback
  * runs, so once a cancel returns that timer's callback is not running. */
-static pthread_mutex_t s_lock;
-static pthread_once_t s_lock_once = PTHREAD_ONCE_INIT;
+static pthread_mutex_t s_lock MDFW_KEEP;
+static pthread_once_t s_lock_once MDFW_KEEP = PTHREAD_ONCE_INIT;
 
 static void init_lock(void) {
   pthread_mutexattr_t a;

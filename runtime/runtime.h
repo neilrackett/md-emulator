@@ -26,6 +26,18 @@ bool mdfw_runtime_own_thread(void);
 void mdfw_runtime_run_timers(uint64_t now_us);
 void mdfw_runtime_timers_reset(void);
 
+/* ram.c: the .mdfw's variables as they were before the first power-on,
+ * put back at every power-on after it, as an RP2040 boots from cleared
+ * RAM. A variable marked MDFW_KEEP (after its name) is left as it is:
+ * what survives on the real part, and the runtime's locks, clock and
+ * whatever else has to outlive a reboot of the firmware. */
+#ifdef __APPLE__
+#define MDFW_KEEP __attribute__((section("__DATA,__mdfw_keep")))
+#else
+#define MDFW_KEEP __attribute__((section("mdfw_keep")))
+#endif
+void mdfw_runtime_ram_power_on(void);
+
 void mdfw_runtime_watchdog_power_on(bool cold);
 void mdfw_runtime_flash_power_on(void);
 void mdfw_runtime_flash_power_off(void);

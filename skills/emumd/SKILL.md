@@ -204,7 +204,7 @@ options with `-O key=value`, and raw Hatari options after `--`.
   first, e.g. `mousemove -100 0` four times then `mousemove 0 -100` three
   times (left then up, so it does not open menus on the way), and later
   moves land at known positions.
-- A reboot keeps the firmware's variables (the RP2040 would start
-  afresh), so `init` must set up what it relies on.
+- A reboot or power cycle starts the firmware from fresh RAM, as the
+  RP2040 does (flash survives, and watchdog scratch survives a reboot).
 - If mdfw warns that Hatari was built from a different version of EmuMD, run
   `mdfw hatari`.

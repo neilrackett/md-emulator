@@ -23,8 +23,8 @@
 /* The lock                                                             */
 /* ------------------------------------------------------------------ */
 
-static pthread_mutex_t s_lock;
-static pthread_once_t s_lock_once = PTHREAD_ONCE_INIT;
+static pthread_mutex_t s_lock MDFW_KEEP;
+static pthread_once_t s_lock_once MDFW_KEEP = PTHREAD_ONCE_INIT;
 static __thread unsigned s_depth;
 static __thread int s_cancel_state;
 

@@ -16,7 +16,7 @@
 #include "runtime.h"
 
 /* mdfw_flash itself is in memory.c, with the template's regions marked. */
-static bool s_flash_ready;
+static bool s_flash_ready MDFW_KEEP;
 
 static const char *flash_file(void) { return mdfw_option("flash"); }
 

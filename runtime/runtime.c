@@ -43,8 +43,9 @@ static char s_options[4096];
 static char s_sd_root[1024];
 
 /* Written by the emulator's thread only, read by any. */
-static uint64_t s_host_us;  /* what the emulator says the time is */
-static uint64_t s_slept_us; /* what sleeps on the emulator's thread added */
+/* The clock runs on across a reboot (MDFW_KEEP, ram.c). */
+static uint64_t s_host_us MDFW_KEEP;  /* what the emulator says the time is */
+static uint64_t s_slept_us MDFW_KEEP; /* what sleeps on the emulator's thread added */
 static mdfw_timer_hw_t s_timer_hw;
 mdfw_timer_hw_t *timer_hw = &s_timer_hw;
 
@@ -66,9 +67,9 @@ bool mdfw_runtime_own_thread(void) { return s_own_thread; }
  * earliest of their deadlines; changed with s_time_lock held). A sleeper
  * sets it before looking at the time and the emulator moves the time on
  * before looking at it, so one of the two always sees the other. */
-static pthread_mutex_t s_time_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t s_time_moved = PTHREAD_COND_INITIALIZER;
-static uint64_t s_wake_at = UINT64_MAX;
+static pthread_mutex_t s_time_lock MDFW_KEEP = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t s_time_moved MDFW_KEEP = PTHREAD_COND_INITIALIZER;
+static uint64_t s_wake_at MDFW_KEEP = UINT64_MAX;
 
 uint64_t mdfw_time_us(void) {
   return __atomic_load_n(&s_host_us, __ATOMIC_SEQ_CST) +
@@ -137,7 +138,7 @@ void mdfw_runtime_sleep(uint64_t us) { mdfw_runtime_sleep_until(mdfw_time_us() +
 /* Logging                                                              */
 /* ------------------------------------------------------------------ */
 
-static pthread_mutex_t s_log_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t s_log_lock MDFW_KEEP = PTHREAD_MUTEX_INITIALIZER;
 static char s_line[1024];
 static size_t s_line_len;
 
@@ -348,6 +349,7 @@ static void stop_main(void) {
  * for a reboot. */
 static int power_on(const emumd_host_t *host, uint64_t now_us, bool cold) {
   if (!host || host->abi != EMUMD_PLUGIN_ABI) return -1;
+  mdfw_runtime_ram_power_on(); /* first, before anything is set */
   s_host = host;
   snprintf(s_options, sizeof(s_options), "%s", host->options ? host->options : "");
   snprintf(s_sd_root, sizeof(s_sd_root), "%s", host->sd_dir ? host->sd_dir : ".");

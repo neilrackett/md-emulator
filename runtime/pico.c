@@ -64,9 +64,10 @@ uint32_t clock_get_hz(enum clock_index clk_index) {
   }
 }
 
-static watchdog_hw_t s_watchdog;
+/* Its scratch registers survive a reboot (MDFW_KEEP), not a power cycle. */
+static watchdog_hw_t s_watchdog MDFW_KEEP;
 watchdog_hw_t *watchdog_hw = &s_watchdog;
-static bool s_watchdog_rebooted;
+static bool s_watchdog_rebooted MDFW_KEEP;
 
 void watchdog_reboot(uint32_t pc, uint32_t sp, uint32_t delay_ms) {
   (void)pc;

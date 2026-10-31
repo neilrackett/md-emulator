@@ -29,8 +29,8 @@ uint get_core_num(void) { return s_core; }
 /* Events (SEV / WFE)                                                   */
 /* ------------------------------------------------------------------ */
 
-static pthread_mutex_t s_event_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t s_event = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t s_event_lock MDFW_KEEP = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t s_event MDFW_KEEP = PTHREAD_COND_INITIALIZER;
 static unsigned s_event_seq;
 
 /* A thread stopped in a condition wait gets the mutex back before it
@@ -74,7 +74,8 @@ typedef struct {
   pthread_cond_t changed;
 } fifo_t;
 
-static fifo_t s_fifo[2] = {
+/* MDFW_KEEP for the locks; the words go at power-off, as the SIO's would. */
+static fifo_t s_fifo[2] MDFW_KEEP = {
     {.lock = PTHREAD_MUTEX_INITIALIZER, .changed = PTHREAD_COND_INITIALIZER},
     {.lock = PTHREAD_MUTEX_INITIALIZER, .changed = PTHREAD_COND_INITIALIZER},
 };
@@ -210,7 +211,10 @@ void multicore_reset_core1(void) {
   s_core1_running = false;
 }
 
-void mdfw_runtime_multicore_stop(void) { multicore_reset_core1(); }
+void mdfw_runtime_multicore_stop(void) {
+  multicore_reset_core1();
+  for (int i = 0; i < 2; i++) s_fifo[i].head = s_fifo[i].count = 0;
+}
 
 /* tight_loop_contents(): let the other threads run, and let the
  * firmware's own threads be stopped. */
@@ -225,8 +229,8 @@ void mdfw_tight_loop(void) {
 /* ------------------------------------------------------------------ */
 
 static spin_lock_t s_spin_regs[32];
-static pthread_mutex_t s_spin_mutex[32];
-static pthread_once_t s_spin_once = PTHREAD_ONCE_INIT;
+static pthread_mutex_t s_spin_mutex[32] MDFW_KEEP;
+static pthread_once_t s_spin_once MDFW_KEEP = PTHREAD_ONCE_INIT;
 static uint32_t s_spin_claimed;
 
 static void spin_init_all(void) {

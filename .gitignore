@@ -1,5 +1,6 @@
 build/
 examples/*/build/
+tests/*/build/
 examples/*/cart/cart.bin
 __pycache__/
 .kilo/

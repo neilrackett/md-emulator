@@ -22,7 +22,7 @@ CACHE=${EMUMD_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/emumd}
 SRC=${1:-$CACHE/hatari-fork}
 HATARI_GIT=${HATARI_GIT:-https://github.com/neilrackett/hatari.git}
 # The fork's emumd branch, as this version of EmuMD was made for.
-HATARI_COMMIT=${HATARI_COMMIT:-4782ad730fdf63f06f8fdd04a9754d8691171ac7}
+HATARI_COMMIT=${HATARI_COMMIT:-0d8586bc64395136816e8d7b9c565ba616600ed8}
 EMUTOS_VERSION=${EMUTOS_VERSION:-1.4}
 EMUTOS="$CACHE/emutos-256k-$EMUTOS_VERSION"
 
